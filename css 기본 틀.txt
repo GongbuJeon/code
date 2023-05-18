@@ -1,0 +1,110 @@
+import './App.css';
+import { useState } from 'react';
+
+
+function App() {
+  const [mode, setMode] = useState('')
+
+  return (
+    <div className='container'>
+      <div className='input'>
+        <input type='date'></input>
+        <button onClick={() => { setMode('plan') }}>Plan</button>
+        <button onClick={() => { setMode('do') }}>do</button>
+        {/* 인풋 값이 변하면/ 로컬스토리지의 데이터를 불러와서/ plan
+        배열과 do 배열을 / map 함수를 써서/ 마진과 높이를 활용해 배치하기 */}
+        {/* 삭제하는 기능 만들기(블럭 안에) */}
+        {/* 수정하는 기능 만들기(블럭 안에)*/}
+      </div>
+      <div className='top'>
+        <div className='empty'>시간</div>
+        <div className='plando'>Plan</div>
+        <div className='plando'>Do</div>
+      </div>
+      <div className='bottom'>
+        <div className='empty'>
+          몇시부터 
+        </div>
+        <div className='plando'>
+          <div>plan 블럭</div>
+        </div>
+        <div className='plando'>
+          <div>do 블럭</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+export default App;
+
+
+// 모달
+
+// function App() {
+//   return (
+//   )
+// }
+// export default App;
+
+
+
+// 블럭
+
+// function App() {
+//   return (
+//    <div style={{width: '100%', marginTop: '1', height: '1', textAlign: 'center'
+    
+//    }}>블럭</div>
+//   )
+// }
+// export default App;
+
+
+=============================================================================================================================================
+
+div {
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.input {
+  width: 100%;
+  height: 5%;
+}
+
+.top {
+  width: 100%;
+  height: 10%;
+  background-color: antiquewhite;
+  display: flex;
+  flex-direction: row;
+}
+
+.bottom {
+  width: 100%;
+  height: 85%;
+  background-color: aquamarine;
+  display: flex;
+  flex-direction: row;
+}
+
+.empty {
+  width: 10%;
+  height: 100%;
+  background-color: aqua;
+}
+
+.plando {
+  width: 45%;
+  height: 100%;
+  background-color: darkseagreen;
+  display: flex;
+  flex-direction: column;
+}
