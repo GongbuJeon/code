@@ -1,0 +1,66 @@
+import './App.css';
+import { React, useState } from 'react';
+
+
+function App() {
+
+  let [a, setA] = useState('');
+  let [b, setB] = useState('');  
+  const [objarr, setObjarr] = useState([]);
+  setObjarr(localStorage.getItem('data'));
+  console.log()
+
+  return (
+    <>
+      <div>
+
+        <input
+          placeholder='질문'
+          onChange={(e) => { setA(e.target.value) }}
+        ></input>
+
+        <button onClick={() => {
+
+          const obj = {'question' : a, 'answer' : b}
+          const aa = [...objarr]
+          aa.push(obj);
+          setObjarr(aa);
+          objarr.push(obj);
+          localStorage.setItem('data', JSON.stringify(objarr));
+
+        }}>입력하기</button>
+
+        <button onClick={()=>{
+
+        }}>음성</button>
+
+      </div>
+
+
+      <div>
+
+        <input placeholder='답'
+          onChange={(e) => { setB(e.target.value) }}
+        ></input>
+
+      </div>
+
+        {/* 배열의 수만큼 반복해서 안의 내용을 화면에 보여주기 */}
+
+        <ol>
+          {objarr.map((item, index) => (
+            <li key={index}>{objarr[index].question}</li>
+          ))}
+        </ol>
+
+        <ol>
+          {objarr.map((item, index) => (
+            <li key={index}>{objarr[index].answer}</li>
+          ))}
+        </ol>
+
+    </>
+  );
+}
+
+export default App;
