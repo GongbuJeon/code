@@ -1,37 +1,86 @@
 import './App.css';
-import { React, useState } from 'react';
+import { React, useState, useRef, useEffect } from 'react';
 
 
 function App() {
 
+  // 임시 저장 state
   let [a, setA] = useState('');
   let [b, setB] = useState('');  
+  const intervalRef = useRef(null);
+  const readingIndexRef = useRef(0);
+
   const [objarr, setObjarr] = useState([]);
-  setObjarr(localStorage.getItem('data'));
-  console.log()
+  // 로컬스토리지에 데이터가 없으면 밑의 코드가 에러를 일으킴
+  // 조건문을 써서 만들기
+
+  useEffect(()=>{
+
+    if (localStorage.getItem('data') !== null ) {
+      setObjarr(JSON.parse(localStorage.getItem('data')));
+    }
+
+    return ()=>{
+      console.log(localStorage.getItem('data'))
+    }
+  }, [])
+
+  const readArray = ()=> {
+    const currentIndex = readingIndexRef.current;
+    if (currentIndex < objarr.length) {
+      const reading = `${objarr[currentIndex].question}  ${objarr[currentIndex].answer}.`
+      const utterance = new SpeechSynthesisUtterance(reading);
+      window.speechSynthesis.speak(utterance);
+
+      intervalRef.current = setTimeout(() => {
+        readingIndexRef.current = currentIndex + 1;
+        readArray();
+      }, 2000);
+    }
+
+    else {
+      readingIndexRef.current = 0;
+    }
+  }
 
   return (
     <>
       <div>
 
+        <button>분류하기</button>
+
+      </div>
+
+
+      <div>
+
         <input
           placeholder='질문'
+          value={a}
           onChange={(e) => { setA(e.target.value) }}
         ></input>
 
         <button onClick={() => {
 
           const obj = {'question' : a, 'answer' : b}
+
           const aa = [...objarr]
           aa.push(obj);
           setObjarr(aa);
           objarr.push(obj);
+
           localStorage.setItem('data', JSON.stringify(objarr));
+
+          // 입력창 초기화
+          setA('')
+          setB('')
+          console.log(a)
 
         }}>입력하기</button>
 
-        <button onClick={()=>{
 
+        <button onClick={()=>{
+          readArray()
         }}>음성</button>
 
       </div>
@@ -40,6 +89,7 @@ function App() {
       <div>
 
         <input placeholder='답'
+          value={b}
           onChange={(e) => { setB(e.target.value) }}
         ></input>
 
@@ -64,3 +114,8 @@ function App() {
 }
 
 export default App;
+
+// [{question : a, answer : b}, {question : c, answer : d}]
+// 순서대로 혹은 랜덤하게
+// 전체 반복재생 가능 ??
+// 그룹핑 ?? 
