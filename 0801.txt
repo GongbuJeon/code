@@ -1,6 +1,6 @@
 import './App.css';
 import { React, useState, useRef, useEffect } from 'react';
-
+let dataArr = []
 
 function App() {
 
@@ -14,14 +14,13 @@ function App() {
   const [mode, setMode] = useState('sequential');
   const [isReading, setIsReading] = useState(false);
 
-  const [dataArr, setdataArr] = useState([]);
   const [randomarr, setRandomarr] = useState([]);
-
+  const [time, setTime] = useState(2.5);
 
   useEffect(() => {
 
     if (localStorage.getItem('data') !== null) {
-      setdataArr(JSON.parse(localStorage.getItem('data')));
+      dataArr = JSON.parse(localStorage.getItem('data'));
     }
 
     return () => {
@@ -29,6 +28,37 @@ function App() {
     }
   }, [])
 
+  const speakAllQuestionsAndAnswers = () => {
+    let allText = '';
+    let allText2 = '';
+    dataArr.forEach(item => {
+      Object.values(item).forEach(qnas => {
+        qnas.forEach(qna => {
+          // allText += `${qna.question}`;
+          // allText2 += `${qna.answer} `;
+          allText += `Question: ${qna.question}. Answer: ${qna.answer}. `;
+        });
+      });
+    });
+
+    if (allText) {
+      speakText(allText, allText2);
+    }
+  };
+
+  const speakText = (text, text2) => {
+    if ('speechSynthesis' in window) {
+      const synthesis = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance2 = new SpeechSynthesisUtterance(text2);
+      synthesis.speak(utterance);
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance2);
+      }, 2500);
+    } else {
+      console.log('Speech synthesis not supported');
+    }
+  };
 
   const shuffleArray = (array) => {
 
@@ -88,7 +118,7 @@ function App() {
         intervalRef.current = setTimeout(() => {
           readingIndexRef.current = currentIndex + 1;
           readArray();
-        }, 5000);
+        }, time * 1000 + 2500);
 
         if (!isReading) {
           console.log('발동')
@@ -118,7 +148,7 @@ function App() {
         intervalRef.current = setTimeout(() => {
           readingIndexRef.current = currentIndex + 1;
           readArray();
-        }, 5000);
+        }, time * 1000 + 2500);
       }
 
       else {
@@ -170,6 +200,13 @@ function App() {
       </div>
 
       <div>
+        <input value={time}
+          onChange={(e) => { setTime(e.target.value) }}
+        ></input>
+        <button>문답 사이 시간 설정</button>
+      </div>
+
+      <div>
         <input placeholder='그룹'
         value={name}
         onChange={(e) => { setName(e.target.value) }}
@@ -205,12 +242,9 @@ function App() {
 
               const groupObj = {}
               groupObj[name] = [obj];
-              const aa = [...dataArr]
-              aa.push(groupObj);
-              // setMode('random')
-              // setdataArr(aa);
+              dataArr.push(groupObj)
               
-              console.log(name, groupObj, aa, dataArr, mode)
+              console.log(name, groupObj, dataArr, mode)
 
             }
             else {
@@ -251,7 +285,7 @@ function App() {
         }}>입력하기</button>
 
 
-        <button onClick={handleStartReading}>음성</button>
+        <button onClick={speakAllQuestionsAndAnswers}>음성</button>
 
       </div>
 
@@ -266,26 +300,41 @@ function App() {
         <button onClick={handleStopReading}>음성중지</button>
 
         <button onClick={()=>{
-          console.log(findValueByKey(dataArr, name))
-          console.log(dataArr)
+          console.log(Object.values(dataArr[0])[0][2].question)
         }}>test</button>
 
       </div>
 
         {/* 배열의 수만큼 반복해서 안의 내용을 화면에 보여주기 */}
 
-        <ol>
-          {dataArr.map((item, index) => (
-            <li key={index}>{dataArr[index].question}</li>
-          ))}
-        </ol>
-
-        <ol>
-          {dataArr.map((item, index) => (
-            <li key={index}>{dataArr[index].answer}</li>
-          ))}
-        </ol>
-
+      <div>
+        {dataArr.map((item, index) => {
+          return (
+            <div key={index}>
+              {Object.keys(item).map(key => (
+                <div key={key}>
+                  <h3>{key}</h3>
+                  <ul>
+                    {item[key].map((qna, qnaIndex) => (
+                      <li key={qnaIndex}>
+                        질문: {qna.question}, 답: {qna.answer}
+                        <button 
+                        style={{marginLeft : '10px'}}
+                        >편집</button>
+                        <button
+                        onClick={()=>{
+                          console.log(qna)
+                        }}
+                        >삭제</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }
@@ -296,10 +345,19 @@ export default App;
 // 전체이름 data : [] (dataArr)
 // 
 
+// 재생정지 버튼 작동하게 하기 
+// 사용자 지정 시간 설정
+// 음성버튼 누르면 음성정지 버튼으로 변경하기
+
+// 그룹핑
+// 배열 키값
 // 편집
 // 삭제
 
-// 재생정지 버튼 작동하게 하기 
-// 그룹핑
-// 사용자 지정 시간 설정
-// 음성버튼 누르면 음성정지 버튼으로 변경하기
+// 사실상 처음부터 다시 짰음 데이터 구조가 달라서
+// 이것저것 생각해봤는데 안됨
+// 데이터 구조가 반복문을 세번 써야 되고 막그럼
+// chatgpt 한테 물어봄 -> 물어봐서 코드 붙여씀
+// 근데 그 코드에 맞춰서 써야되는데 응용하기가 어려움
+// 그래서 또 물어봄 
+// 현타가 옴
