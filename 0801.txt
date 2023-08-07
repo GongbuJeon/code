@@ -6,49 +6,181 @@ function App() {
 
   // 임시 저장 state
   let [a, setA] = useState('');
-  let [b, setB] = useState('');  
+  let [b, setB] = useState('');
+  let [name, setName] = useState('');
+
   const intervalRef = useRef(null);
   const readingIndexRef = useRef(0);
+  const [mode, setMode] = useState('sequential');
+  const [isReading, setIsReading] = useState(false);
 
-  const [objarr, setObjarr] = useState([]);
-  // 로컬스토리지에 데이터가 없으면 밑의 코드가 에러를 일으킴
-  // 조건문을 써서 만들기
+  const [dataArr, setdataArr] = useState([]);
+  const [randomarr, setRandomarr] = useState([]);
 
-  useEffect(()=>{
 
-    if (localStorage.getItem('data') !== null ) {
-      setObjarr(JSON.parse(localStorage.getItem('data')));
+  useEffect(() => {
+
+    if (localStorage.getItem('data') !== null) {
+      setdataArr(JSON.parse(localStorage.getItem('data')));
     }
 
-    return ()=>{
+    return () => {
       console.log(localStorage.getItem('data'))
     }
   }, [])
 
-  const readArray = ()=> {
-    const currentIndex = readingIndexRef.current;
-    if (currentIndex < objarr.length) {
-      const reading = `${objarr[currentIndex].question}  ${objarr[currentIndex].answer}.`
-      const utterance = new SpeechSynthesisUtterance(reading);
-      window.speechSynthesis.speak(utterance);
 
-      intervalRef.current = setTimeout(() => {
-        readingIndexRef.current = currentIndex + 1;
+  const shuffleArray = (array) => {
+
+    const n = array.length;
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    setRandomarr([...array]); // 랜덤하게 뒤섞인 배열로 상태를 업데이트
+    console.log(randomarr)
+  };
+
+  const handleShuffle = () => {
+    // 배열을 랜덤하게 뒤섞기 위해 shuffleArray 함수를 호출
+    shuffleArray([...dataArr]);
+  };
+
+  const handleStartReading = () => {
+    if (window.speechSynthesis && !isReading) {
+      setIsReading(true);
+      // 객체 읽기를 시작
+      console.log(isReading)
+      readArray();
+      
+    }
+  };
+
+  const handleStopReading = () => {
+    if (isReading) {
+      setIsReading(false);
+      window.speechSynthesis.cancel();
+      console.log(1)
+    }
+  };
+
+// if isreading(false) == break
+
+  const readArray = () => {
+
+    if (mode == 'sequential') {
+      
+      setIsReading(true);
+      console.log(isReading)
+      
+      const currentIndex = readingIndexRef.current;
+      if (currentIndex < dataArr.length) {
+        const reading = `${dataArr[currentIndex].question}`
+        const reading2 = `${dataArr[currentIndex].answer}`
+        const utterance = new SpeechSynthesisUtterance(reading);
+        const utterance2 = new SpeechSynthesisUtterance(reading2);
+        window.speechSynthesis.speak(utterance);
+        
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance2);
+        }, 2500);
+
+        intervalRef.current = setTimeout(() => {
+          readingIndexRef.current = currentIndex + 1;
+          readArray();
+        }, 5000);
+
+        if (!isReading) {
+          console.log('발동')
+          window.speechSynthesis.cancel();
+        }
+      }
+
+      else {
+        readingIndexRef.current = 0;
         readArray();
-      }, 2000);
+      }
     }
 
     else {
-      readingIndexRef.current = 0;
+
+      const currentIndex = readingIndexRef.current;
+      if (currentIndex < randomarr.length) {
+        const reading = `${randomarr[currentIndex].question}`
+        const reading2 = `${randomarr[currentIndex].answer}`
+        const utterance = new SpeechSynthesisUtterance(reading);
+        const utterance2 = new SpeechSynthesisUtterance(reading2);
+        window.speechSynthesis.speak(utterance);
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance2);
+        }, 2500);
+
+        intervalRef.current = setTimeout(() => {
+          readingIndexRef.current = currentIndex + 1;
+          readArray();
+        }, 5000);
+      }
+
+      else {
+        readingIndexRef.current = 0;
+        readArray();
+      }
     }
   }
 
+  const Buttonchange = () => {
+    if (mode =='sequential') {
+      setMode('random')
+      document.querySelector('.off').classList.toggle('on-off')
+      document.querySelector('.off2').classList.toggle('on-off')
+    }
+
+    else if (mode == 'random') {
+      setMode('sequential')
+      document.querySelector('.off').classList.toggle('on-off')
+      document.querySelector('.off2').classList.toggle('on-off')
+    }
+  }
+
+  function findValueByKey(array, key) {
+    for (const obj1 of array) {
+      if (key in obj1) {
+        return obj1[key];
+      }
+    }
+    return null; // 키를 찾지 못한 경우
+  }
+  
+
+
   return (
     <>
+
       <div>
+        <button className='off on-off'
+          onClick={Buttonchange}>
+          순차재생</button>
 
-        <button>분류하기</button>
+        <button className='off2'
+          onClick={() => {
+            Buttonchange()
+            handleShuffle()
+          }}>
+          랜덤재생</button>
+      </div>
 
+      <div>
+        <input placeholder='그룹'
+        value={name}
+        onChange={(e) => { setName(e.target.value) }}
+        ></input>
+
+        {/* <button className='off3'
+        onClick={()=>{
+          document.querySelector('.off3').classList.toggle('on-off')
+          // if classname off3 on-off
+          // onchange된 input의 이름을 key값으로 지정하는 오브젝트를 만듬.
+        }}>분류하기</button> */}
       </div>
 
 
@@ -62,26 +194,64 @@ function App() {
 
         <button onClick={() => {
 
-          const obj = {'question' : a, 'answer' : b}
+          if (name == '') {
+            alert('그룹을 지정해 주세요.')
+          }
 
-          const aa = [...objarr]
-          aa.push(obj);
-          setObjarr(aa);
-          objarr.push(obj);
+          else {
+            const obj = { 'question': a, 'answer': b }
 
-          localStorage.setItem('data', JSON.stringify(objarr));
+            if (findValueByKey(dataArr, name) == null) {
 
-          // 입력창 초기화
-          setA('')
-          setB('')
-          console.log(a)
+              const groupObj = {}
+              groupObj[name] = [obj];
+              const aa = [...dataArr]
+              aa.push(groupObj);
+              // setMode('random')
+              // setdataArr(aa);
+              
+              console.log(name, groupObj, aa, dataArr, mode)
+
+            }
+            else {
+              findValueByKey(dataArr, name).push(obj)
+              console.log(1)
+              // dataArr의 오브젝트들 중 이름이 name인 object를 찾아서 그 밸류값인 배열에 obj를 푸쉬
+            }
+
+            // const aa = [...dataArr]
+            // aa.push(obj);
+            // setdataArr(aa);
+            // dataArr.push(obj);
+
+            console.log(2)
+            localStorage.setItem('data', JSON.stringify(dataArr));
+
+            // 그룹별로 다른 데이터 형식으로 저장 + 화면에 보여주기
+            // if (dataArr && Object.keys(dataArr).some(key => { return (key == name) })) {
+            //   const grobj = {name : dataArr}
+            // }
+            // if name 이 없으면
+            // {그룹이름 : dataArr}
+            
+            // else {
+            //   Array
+            // }
+            
+            // 그룹이 있으면
+            // 그룹이름의 value 배열에 push
+
+            // [{그룹이름 : dataArr}, {그룹이름2 : dataArr}]의 형태로 로컬스토리지에 저장
+
+            // 입력창 초기화
+            setA('')
+            setB('')
+          }
 
         }}>입력하기</button>
 
 
-        <button onClick={()=>{
-          readArray()
-        }}>음성</button>
+        <button onClick={handleStartReading}>음성</button>
 
       </div>
 
@@ -93,19 +263,26 @@ function App() {
           onChange={(e) => { setB(e.target.value) }}
         ></input>
 
+        <button onClick={handleStopReading}>음성중지</button>
+
+        <button onClick={()=>{
+          console.log(findValueByKey(dataArr, name))
+          console.log(dataArr)
+        }}>test</button>
+
       </div>
 
         {/* 배열의 수만큼 반복해서 안의 내용을 화면에 보여주기 */}
 
         <ol>
-          {objarr.map((item, index) => (
-            <li key={index}>{objarr[index].question}</li>
+          {dataArr.map((item, index) => (
+            <li key={index}>{dataArr[index].question}</li>
           ))}
         </ol>
 
         <ol>
-          {objarr.map((item, index) => (
-            <li key={index}>{objarr[index].answer}</li>
+          {dataArr.map((item, index) => (
+            <li key={index}>{dataArr[index].answer}</li>
           ))}
         </ol>
 
@@ -115,7 +292,14 @@ function App() {
 
 export default App;
 
-// [{question : a, answer : b}, {question : c, answer : d}]
-// 순서대로 혹은 랜덤하게
-// 전체 반복재생 가능 ??
-// 그룹핑 ?? 
+// [  { name1 : [{question : a, answer : b}, {question : c, answer : d}] }, { name2 : [{question : a, answer : b}, {question : c, answer : d}] } ]
+// 전체이름 data : [] (dataArr)
+// 
+
+// 편집
+// 삭제
+
+// 재생정지 버튼 작동하게 하기 
+// 그룹핑
+// 사용자 지정 시간 설정
+// 음성버튼 누르면 음성정지 버튼으로 변경하기
