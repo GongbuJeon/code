@@ -1,0 +1,1098 @@
+app.js
+/*eslint-disable*/
+import Input from "./input";
+import Barchart from "./chart";
+import { useState, useEffect } from "react";
+import { FaPen, FaArrowLeft, FaDonate, FaCog, FaUndo, FaTrash } from "react-icons/fa";
+let myArray = [];
+let myList = [];
+
+
+function App() {
+
+  let [myArrayState, setMS] = useState([]);
+  const [mode, setMode] = useState('main');
+  let [a, setA] = useState('')
+  let [b, setB] = useState('1')
+  let [c, setC] = useState('')
+  let [d, setD] = useState('')
+  const [d1, setD1] = useState([]);
+  const [w1, setW1] = useState([]);
+  const [m1, setM1] = useState([]);
+  const [y1, setY1] = useState([]);
+  const [tempobj, setTempobj] = useState({});
+
+  const setarray = () => {
+    const a1 = myArray.filter(obj => obj.간격 === '1');
+    setD1(a1);
+    const a5 = myArray.filter(obj => obj.간격 === '7');
+    setW1(a5);
+    const a7 = myArray.filter(obj => obj.간격 === '30');
+    setM1(a7);
+    const a11 = myArray.filter(obj => obj.간격 === '365');
+    setY1(a11);
+    console.log('setarray')
+  }
+
+  const confirmInput = (par) => {
+    setMode('main');
+    myArray = par;
+    setMS(par);
+    setarray();
+    console.log(myArray);
+    document.querySelector('.input').classList.remove('show');
+    document.querySelector('.topMenu').classList.toggle('none');
+    document.querySelector('.main').classList.toggle('none');
+  }
+
+  const goBackInput = (par) => {
+    setMode('main');
+    document.querySelector('.topMenu').classList.toggle('none');
+    document.querySelector('.main').classList.toggle('none');
+    document.querySelector('.input').classList.toggle('show');
+  }
+
+
+  const goHomeChart = (par) => {
+    document.querySelector('.topMenu').classList.toggle('none');
+    document.querySelector('.chart').classList.remove('show');
+    document.querySelector('.main').classList.toggle('none');
+    document.querySelector('.underMenu').classList.toggle('none');
+    document.querySelector('.container').classList.toggle('height100');
+  }
+
+  const inputFromChart = (par) => {
+    document.querySelector('.chart').classList.remove('show');
+    document.querySelector('.input').classList.toggle('show');
+    document.querySelector('.underMenu').classList.toggle('none');
+    document.querySelector('.container').classList.toggle('height100');
+  }
+
+  const modalSet = (a) => {
+    document.querySelector('.modal').classList.add('block');
+    setTempobj(a)
+    setA(a.항목);
+    setB(a.간격);
+    setC(a.가격);
+    setD(a.밸류);
+  }
+
+  const trash = (a) => {
+    let rev = myArray.filter(item => item.항목 !== a.항목);
+    myArray = rev;
+    setarray();
+  }
+
+  useEffect(() => {
+
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const parameterValue = urlSearchParams.get("data");
+    // 'parameterName' 이라는 파라미터가 있는지 확인
+    console.log(window.location.href)
+    console.log(urlSearchParams)
+    console.log(parameterValue)
+
+    if (parameterValue !== null) {
+      console.log('값있음')
+      myArray = JSON.parse(parameterValue);
+      setarray();
+    }
+
+    return () => {
+    }
+  }, [])
+
+  async function makeURL() {
+    console.log('url')
+    let parsedata = JSON.stringify(myArray);
+    const encodedValue = encodeURIComponent(parsedata);
+    const myLink = window.location.href + 'index.html?data=' + encodedValue;
+
+    setTimeout(() => {
+      navigator.clipboard.writeText(myLink)
+        .then(() => {
+          console.log('텍스트가 클립보드에 복사되었습니다.');
+          alert('주소가 복사되었습니다.')
+        })
+        .catch(err => {
+          console.error('텍스트 복사 실패: ', err);
+        });
+    }, 10);
+  }
+
+  const Cell = (a, i, date) => {
+    console.log(a)
+    console.log(a.a)
+    console.log(a.date)
+  
+    return (
+        <span key={i}>
+          <div style={{ display: 'flex', alignItems: 'center', margin : '5%', padding : '5%', borderRadius : '7%', backgroundColor : 'rgb(39, 37, 37)', border : '1px solid white' }}>
+            <span style={{ width: '80%' }}>{a.a.항목} : {a.a.밸류}{a.date}마다 {a.a.가격문자열}원씩</span>
+            <FaUndo
+              style={{ width: '10%' }}
+              onClick={() => {
+                modalSet(a)
+              }}
+            ></FaUndo>
+            <FaTrash style={{ width: '10%', marginLeft : '5%' }}
+              onClick={() => {
+                let res = window.confirm('삭제하시겠습니까?')
+                if(res) {
+                  trash(a)
+                } 
+              }}
+            ></FaTrash>
+          </div>
+        </span>
+    )
+  }
+
+
+  return (
+    <div className='container'>
+
+      <div className="modal">
+        {Object.keys(tempobj).length == 0 ? <>1</> : 
+        <div className="modalInput">   
+            <div className='topMenu-modal'>
+              <div className='logo'
+              onClick={()=>{
+                document.querySelector('.modal').classList.remove('block');
+              }}
+              >
+                <FaArrowLeft></FaArrowLeft>
+              </div>
+            </div>
+        <div className='content-noBorder'>
+                <div>항목 입력</div>
+                <input
+                    style={{ width: '50%', height: '40%' }}
+                    placeholder='항목'
+                    defaultValue={tempobj.항목}
+                    onChange={(e) => {
+                        setA(e.target.value)
+                    }}
+                ></input>
+            </div>
+
+            <div className='content-noBorder'>
+                <div>간격 입력(~마다)</div>
+                <div style={{ display: 'flex', justifyContent : 'center',  backgroundColor: 'rgb(39, 37, 37)' }}>
+                    <input
+                        style={{ width: '10%', height: '140%' }}
+                        type='number'
+                        placeholder='숫자'
+                        defaultValue={tempobj.밸류}
+                        onChange={(e) => {
+                            setD(e.target.value);
+                        }}
+                    ></input>
+                    <select
+                        style={{ width: '20%', height: '170%' }}
+                        onChange={(e) => {
+                            setB(e.target.value)
+                        }}>
+                        <option value={1}>일</option>
+                        <option value={7}>주일</option>
+                        <option value={30}>개월(30일)</option>
+                        <option value={365}>년(365일)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div className='content-noBorder'>
+                <div>가격 입력(원)</div>
+                <input
+                    style={{ width: '50%', height: '40%' }}
+                    type='number'
+                    placeholder='가격'
+                    defaultValue={tempobj.가격}
+                    onChange={(e) => {
+                        setC(e.target.value)
+                    }}
+                ></input>
+            </div>
+
+            <div className='content-half noBorder'
+                onClick={() => {
+                    if (c === '') {
+                        alert('가격을 다시 입력해 주세요.')
+                    }
+                    else {
+                        tempobj.항목 = a
+                        tempobj.간격 = b
+                        tempobj.가격 = c
+                        tempobj.가격문자열 = c.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                        tempobj.달 = Math.floor(c * 30 / b / 10000)
+                        tempobj.년 = Math.floor(c * 365 / b / 10000)
+                        tempobj.밸류 = d
+
+                        let rrr = myArray.filter(item => item.항목 == tempobj.항목);
+                        rrr = tempobj;
+                        console.log(myArray);
+                        setarray();
+                        document.querySelector('.modal').classList.remove('block');
+                    }
+                }}>수정하기</div>
+        </div>}
+      </div>
+
+      <div className='topMenu'>
+        <div className='logo'>
+          <FaDonate></FaDonate>
+        </div>
+        <div className='any1'>
+          <FaCog></FaCog>
+        </div>
+      </div>
+
+      <div className='main'>
+        <div className='content'
+          onClick={() => {
+            document.querySelector('.topMenu').classList.toggle('none');
+            document.querySelector('.main').classList.toggle('none');
+            document.querySelector('.input').classList.toggle('show');
+            if (myArrayState.length === 0) {
+              setMS([1]);
+            }
+            else {
+              setMS([]);
+            }
+            if (mode === 'main') {
+              setMode('input')
+            };
+          }}
+        >내 지출 만들기</div>
+
+        <div className='list'>
+          {/* 메인 */}
+
+          {d1.length == 0 ? <></> : <div>{d1.map((a, i) => (
+            <Cell
+              a={a}
+              i={i}
+              date = {'일'}
+            ></Cell>
+          ))}</div>
+          }
+
+          {w1.length == 0 ? <></> : <div>{w1.map((a, i) => (
+            <Cell
+              a={a}
+              i={i}
+              date = {'주일'}
+            ></Cell>
+          ))}</div>
+          }
+          {m1.length == 0 ? <></> : <div>{m1.map((a, i) => (
+            <Cell
+              a={a}
+              i={i}
+              date = {'개월'}
+            ></Cell>
+          ))}</div>
+          }
+          {y1.length == 0 ? <></> : <div>{y1.map((a, i) => (
+            <Cell
+              a={a}
+              i={i}
+              date = {'년'}
+            ></Cell>
+          ))}</div>
+          }
+        </div>
+      </div>
+
+
+
+      <div className='underMenu'>
+        <div className='button'
+          onClick={() => {
+            if (mode === 'main') {
+              document.querySelector('.topMenu').classList.toggle('none');
+              document.querySelector('.main').classList.toggle('none');
+              document.querySelector('.chart').classList.toggle('show');
+              document.querySelector('.underMenu').classList.toggle('none');
+              document.querySelector('.container').classList.toggle('height100');
+            }
+          }}
+        >차트 보기</div>
+        <div className='button'></div>
+        <div className='button'></div>
+        <div className='button'
+          onClick={() => {
+            makeURL();
+          }}>저장</div>
+      </div>
+
+      {/* 이상 메인 */}
+
+
+      <div className="input">
+        <Input
+          myArray={myArray}
+          myList={myList}
+          goBackInput={goBackInput}
+          inputButton={confirmInput}
+        ></Input>
+      </div>
+
+      <div className="chart">
+        {myArray.length == 0 ?
+          <>
+            <div className='topMenu'>
+              <div className='logo'>
+                <FaArrowLeft onClick={() => {
+                  document.querySelector('.topMenu').classList.toggle('none');
+                  document.querySelector('.main').classList.toggle('none');
+                  document.querySelector('.chart').classList.toggle('show');
+                }}></FaArrowLeft>
+              </div>
+            </div>
+            <div>내 지출이 없습니다.</div>
+            <div>지출을 만들어 보세요.</div>
+          </>
+          : <Barchart
+            myArray={myArray}
+            goHomeChart={goHomeChart}
+            inputFromChart={inputFromChart}
+          ></Barchart>}
+      </div>
+    </div>
+  )
+}
+
+
+
+
+export default App;
+=====
+css
+div {
+  box-sizing: content-box;
+  font-size: 22px;
+  background-color: black;
+  color : white;
+  font-weight: bold;
+}
+
+button {
+  box-sizing: content-box;
+}
+
+
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: content-box;
+  padding: 0px;
+  overflow: auto;
+  /* display: flex; */
+  justify-content: center;
+  flex-wrap: wrap;
+  /* background-color: rgb(34, 32, 32); */
+}
+
+.topMenu {
+  width: 100%;
+  height: 10%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.topMenu-modal {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  top: 5%;
+}
+
+.logo {
+  width: 20%;
+  height: 10%;
+  position: fixed;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.chart-topbar {
+  right: 19%;
+  width: 62%;
+  height: 10%;
+  position: fixed;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.any1 {
+  width: 20%;
+  height: 10%;
+  position: fixed;
+  right: 0%;
+  text-align: center;
+  align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.any2 {
+  width: 20%;
+  height: 10%;
+  position: fixed;
+  right: 20%;
+  text-align: center;
+  align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.main {
+  width: 100%;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content {
+  width: 60%;
+  height: 15%;
+  border: 1px solid black;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 5%;
+  background-color: rgb(39, 37, 37);
+}
+
+.content-noBorder{
+  width: 60%;
+  min-width: 240px;
+  height: 15%;
+  border: 0px solid black;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 5%;
+  background-color: rgb(39, 37, 37);
+}
+
+.underMenu {
+  width: 100%;
+  height: 10%;
+  top: 90%;
+  position: fixed;
+  box-sizing: border-box;
+  display: flex;
+  border-top : 1px solid black;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  align-items: center;
+  z-index: 100;
+  background-color: black;
+}
+
+.button {
+  width: 25%;
+  min-width: 70px;
+  height: 100%;
+  margin: 3%;
+  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+}
+
+.hidden {
+  width: 100%;
+  height: 0%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.content-half {
+    width: 30%;
+    min-width: 180px;
+    height: 7.5%;
+    border: 1px solid black;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 5%;
+    background-color: rgb(39, 37, 37);
+}
+
+.input {
+  width: 100%;
+  height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  overflow: auto;
+}
+.input > .content {
+  height: 0;
+  margin: 0;
+}
+
+.hidden2 {
+  width: 100%;
+  height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  /* transition: opacity 3s ease; */
+  overflow: auto;
+}
+
+.chart {
+  width: 100%;
+  height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+  opacity: 0;
+  overflow: auto;
+}
+
+.modal {
+  z-index: 10000;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: darkgrey;
+  display: none;
+}
+
+.modalInput {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  background-color: darkgrey;
+}
+
+.none {
+  display: none;
+}
+
+.show {
+  visibility: visible;
+  opacity: 1;
+  height: 80%;
+  transition: opacity 1.5s ease;
+}
+
+.show > .content {
+  height: 15%;
+  margin-top: 5%;
+}
+
+.temp {
+  width: 100%;
+  height: 50%;
+  min-width: 300px;
+  min-height: 100px;
+  border: 1px solid black;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 5%;
+}
+
+.noBorder {
+  border: 0px solid black;
+}
+
+.list{
+  width: 80%;
+  min-width: 260px;
+  height: 15%;
+  border: 0px solid black;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 5%;
+}
+
+.block {
+  display: block;
+}
+
+.height100 {
+  height: 100%;
+}
+=====
+chart.js
+import * as React from 'react';
+import { ResponsiveBar } from '@nivo/bar';
+import { FaHome, FaPlus } from "react-icons/fa";
+
+// 이제 여기서 데이터를 input이나 list로부터 받아야 함.
+
+const Barchart = ({ myArray, goHomeChart, inputFromChart }) => {
+
+    const home2 = (par) => {
+        goHomeChart(par)
+    }
+
+    const input = (par) => {
+        inputFromChart(par)
+    }
+
+    return (
+
+        // chart height이 100%이기 때문이 chart를 덮는 마크업 요소에 height 설정
+        <>
+            <div style={{width : '100%', height : '100%', backgroundColor : 'white', boxSizing : 'border-box', zIndex : '1'}}>
+                <div className='logo'>
+                    <FaHome
+                    onClick={()=>{home2()}}
+                    ></FaHome>
+                </div>
+
+                <div className='chart-topbar'>
+                    <button>월</button>
+                    <button>년</button>
+                    {/* // 월 누르면 월만 보여주고 나머지는 없애기 (display none) */}
+                </div>
+
+                <div className='any1'>
+                    <FaPlus
+                    onClick={()=>{input()}}
+                    ></FaPlus>
+                </div>
+            </div>
+
+            <div style={{ width: '100vw', height: '100vh', margin: '0 auto' }}>
+                <ResponsiveBar
+                    /**
+                     * chart에 사용될 데이터
+                     */
+                    data={myArray}
+                    /**
+                     * chart에 보여질 데이터 key (측정되는 값)
+                     */
+                    keys={['달']}
+                    /**
+                     * keys들을 그룹화하는 index key (분류하는 값)
+                     */
+                    indexBy="항목"
+                    /**
+                     * chart margin
+                     */
+                    margin={{ top: 50, right: 100, bottom: 500, left: 100 }}
+                    /**
+                     * chart padding (bar간 간격)
+                     */
+                    padding={0.3}
+                    // minValue="auto"
+                    // maxValue="400"
+                    layout="horizontal"
+                    /**
+                     * chart 색상
+                     */
+                    colors={['aquamarine', 'brown', 'orange']} // 커스터하여 사용할 때
+                    // colors={{ scheme: 'nivo' }} // nivo에서 제공해주는 색상 조합 사용할 때
+                    /**
+                     * color 적용 방식
+                     */
+                    colorBy="id" // 색상을 keys 요소들에 각각 적용
+                    // colorBy="indexValue" // indexBy로 묵인 인덱스별로 각각 적용
+                    theme={{
+                        /**
+                         * label style (bar에 표현되는 글씨)
+                         */
+                        labels: {
+                            text: {
+                                fontSize: 30,
+                                fill: 'black',
+                            },
+                        },
+                        /**
+                         * legend style (default로 우측 하단에 있는 색상별 key 표시)
+                         */
+                        legends: {
+                            text: {
+                                fontSize: 12,
+                                fill: 'white',
+                            },
+                        },
+                        axis: {
+                            /**
+                             * axis legend style (bottom, left에 있는 글씨)
+                             */
+                            legend: {
+                                text: {
+                                    fontSize: 20,
+                                    fill: 'white',
+                                },
+                            },
+                            /**
+                             * axis ticks style (bottom, left에 있는 값)
+                             */
+                            ticks: {
+                                text: {
+                                    fontSize: 16,
+                                    fill: 'white',
+                                },
+                            },
+                        },
+                    }}
+                    /**
+                     * axis bottom 설정
+                     */
+                    axisBottom={{
+                        tickSize: 5, // 값 설명하기 위해 튀어나오는 점 크기
+                        tickPadding: 5, // tick padding
+                        tickRotation: 0, // tick 기울기
+                        legend: '가격(만원)', // bottom 글씨
+                        legendPosition: 'middle', // 글씨 위치
+                        legendOffset: 70, // 글씨와 chart간 간격
+                        tickValues: 4
+                    }}
+                    /**
+                     * axis left 설정
+                     */
+                    axisLeft={{
+                        tickSize: 5, // 값 설명하기 위해 튀어나오는 점 크기
+                        tickPadding: 5, // tick padding
+                        tickRotation: 0, // tick 기울기
+                        legend: '항목', // left 글씨
+                        legendPosition: 'middle', // 글씨 위치
+                        legendOffset: -80, // 글씨와 chart간 간격
+                    }}
+                    /**
+                     * label 안보이게 할 기준 width
+                     */
+                    labelSkipWidth={36}
+                    /**
+                     * label 안보이게 할 기준 height
+                     */
+                    labelSkipHeight={12}
+                    /**
+                     * bar 클릭 이벤트
+                     */
+                    // onClick={handle.barClick}
+                    /**
+                     * legend 설정 (default로 우측 하단에 있는 색상별 key 표시)
+                     */
+                    legends={[
+                        {
+                            dataFrom: 'keys', // 보일 데이터 형태
+                            anchor: 'bottom-right', // 위치
+                            direction: 'column', // item 그려지는 방향
+                            justify: false, // 글씨, 색상간 간격 justify 적용 여부
+                            translateX: 120, // chart와 X 간격
+                            translateY: 0, // chart와 Y 간격
+                            itemsSpacing: 2, // item간 간격
+                            itemWidth: 100, // item width
+                            itemHeight: 20, // item height
+                            itemDirection: 'left-to-right', // item 내부에 그려지는 방향
+                            itemOpacity: 0.85, // item opacity
+                            symbolSize: 20, // symbol (색상 표기) 크기
+                            effects: [
+                                {
+                                    // 추가 효과 설정 (hover하면 item opacity 1로 변경)
+                                    on: 'hover',
+                                    style: {
+                                        itemOpacity: 1,
+                                    },
+                                },
+                            ],
+                            // onClick: handle.legendClick, // legend 클릭 이벤트
+                        },
+                    ]}
+                />
+            </div>
+            <div style={{ width: '100vw', height: '100vh', margin: '0 auto' }}>
+                <ResponsiveBar
+                    /**
+                     * chart에 사용될 데이터
+                     */
+                    data={myArray}
+                    /**
+                     * chart에 보여질 데이터 key (측정되는 값)
+                     */
+                    keys={['년']}
+                    /**
+                     * keys들을 그룹화하는 index key (분류하는 값)
+                     */
+                    indexBy="항목"
+                    /**
+                     * chart margin
+                     */
+                    margin={{ top: 50, right: 100, bottom: 100, left: 100 }}
+                    /**
+                     * chart padding (bar간 간격)
+                     */
+                    padding={0.3}
+                    // minValue="auto"
+                    // maxValue="400"
+                    layout="horizontal"
+                    /**
+                     * chart 색상
+                     */
+                    colors={['aquamarine', 'brown', 'orange']} // 커스터하여 사용할 때
+                    // colors={{ scheme: 'nivo' }} // nivo에서 제공해주는 색상 조합 사용할 때
+                    /**
+                     * color 적용 방식
+                     */
+                    colorBy="id" // 색상을 keys 요소들에 각각 적용
+                    // colorBy="indexValue" // indexBy로 묵인 인덱스별로 각각 적용
+                    theme={{
+                        /**
+                         * label style (bar에 표현되는 글씨)
+                         */
+                        labels: {
+                            text: {
+                                fontSize: 30,
+                                fill: 'black',
+                            },
+                        },
+                        /**
+                         * legend style (default로 우측 하단에 있는 색상별 key 표시)
+                         */
+                        legends: {
+                            text: {
+                                fontSize: 12,
+                                fill: 'white',
+                            },
+                        },
+                        axis: {
+                            /**
+                             * axis legend style (bottom, left에 있는 글씨)
+                             */
+                            legend: {
+                                text: {
+                                    fontSize: 20,
+                                    fill: 'white',
+                                },
+                            },
+                            /**
+                             * axis ticks style (bottom, left에 있는 값)
+                             */
+                            ticks: {
+                                text: {
+                                    fontSize: 16,
+                                    fill: 'white',
+                                },
+                            },
+                        },
+                    }}
+                    /**
+                     * axis bottom 설정
+                     */
+                    axisBottom={{
+                        tickSize: 5, // 값 설명하기 위해 튀어나오는 점 크기
+                        tickPadding: 5, // tick padding
+                        tickRotation: 0, // tick 기울기
+                        legend: '가격(만원)', // bottom 글씨
+                        legendPosition: 'middle', // 글씨 위치
+                        legendOffset: 70, // 글씨와 chart간 간격
+                        tickValues: 3
+                    }}
+                    /**
+                     * axis left 설정
+                     */
+                    axisLeft={{
+                        tickSize: 5, // 값 설명하기 위해 튀어나오는 점 크기
+                        tickPadding: 5, // tick padding
+                        tickRotation: 0, // tick 기울기
+                        legend: '항목', // left 글씨
+                        legendPosition: 'middle', // 글씨 위치
+                        legendOffset: -80, // 글씨와 chart간 간격
+                    }}
+                    /**
+                     * label 안보이게 할 기준 width
+                     */
+                    labelSkipWidth={36}
+                    /**
+                     * label 안보이게 할 기준 height
+                     */
+                    labelSkipHeight={12}
+                    /**
+                     * bar 클릭 이벤트
+                     */
+                    // onClick={handle.barClick}
+                    /**
+                     * legend 설정 (default로 우측 하단에 있는 색상별 key 표시)
+                     */
+                    legends={[
+                        {
+                            dataFrom: 'keys', // 보일 데이터 형태
+                            anchor: 'bottom-right', // 위치
+                            direction: 'column', // item 그려지는 방향
+                            justify: false, // 글씨, 색상간 간격 justify 적용 여부
+                            translateX: 120, // chart와 X 간격
+                            translateY: 0, // chart와 Y 간격
+                            itemsSpacing: 2, // item간 간격
+                            itemWidth: 100, // item width
+                            itemHeight: 20, // item height
+                            itemDirection: 'left-to-right', // item 내부에 그려지는 방향
+                            itemOpacity: 0.85, // item opacity
+                            symbolSize: 20, // symbol (색상 표기) 크기
+                            effects: [
+                                {
+                                    // 추가 효과 설정 (hover하면 item opacity 1로 변경)
+                                    on: 'hover',
+                                    style: {
+                                        itemOpacity: 1,
+                                    },
+                                },
+                            ],
+                            // onClick: handle.legendClick, // legend 클릭 이벤트
+                        },
+                    ]}
+                />
+            </div>
+        </>
+    );
+};
+
+export default Barchart;
+=====
+input.js
+/*eslint-disable*/
+import './App.css';
+import { React, useState } from 'react';
+import { FaArrowLeft } from "react-icons/fa";
+
+const Input = ({ myArray, inputButton, goBackInput }) => {
+
+    let [a, setA] = useState('')
+    let [b, setB] = useState('1')
+    let [c, setC] = useState('')
+    let [d, setD] = useState('')
+
+    const buttonOnclick = (par) => {
+        inputButton(par)
+    }
+
+    const arrowleft = (par) => {
+        goBackInput(par);
+    }
+
+    return (
+        <>
+            <div className='topMenu'>
+                {/* <div className='logo'>뒤로</div> */}
+                <div className='logo'>
+                    <FaArrowLeft
+                    onClick={()=>{
+                        setA('');
+                        setB('1');
+                        setC('');
+                        setD('');
+                        arrowleft()}}
+                    ></FaArrowLeft>
+                </div>
+            </div>
+            <div className='content-noBorder'>
+                <div>항목 입력</div>
+                <input
+                    style={{ width: '50%', height: '40%' }}
+                    placeholder='항목'
+                    value={a}
+                    onChange={(e) => {
+                        setA(e.target.value)
+                    }}
+                ></input>
+            </div>
+
+            <div className='content-noBorder'>
+                <div>간격 입력(~마다)</div>
+                <div style={{ display: 'flex', justifyContent : 'center',  backgroundColor: 'rgb(39, 37, 37)' }}>
+                    <input
+                        style={{ width: '10%', height: '140%' }}
+                        type='number'
+                        placeholder='숫자'
+                        value={d}
+                        onChange={(e) => {
+                            setD(e.target.value);
+                        }}
+                    ></input>
+                    <select
+                        style={{ width: '20%', height: '170%' }}
+                        onChange={(e) => {
+                            setB(e.target.value)
+                        }}>
+                        <option value={1}>일</option>
+                        <option value={7}>주일</option>
+                        <option value={30}>개월(30일)</option>
+                        <option value={365}>년(365일)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div className='content-noBorder'>
+                <div>가격 입력(원)</div>
+                <input
+                    style={{ width: '50%', height: '40%' }}
+                    type='number'
+                    placeholder='가격'
+                    value={c}
+                    onChange={(e) => {
+                        setC(e.target.value)
+                    }}
+                ></input>
+            </div>
+
+            <div className='content-half noBorder'
+                onClick={() => {
+                    if (c === '') {
+                        alert('가격을 다시 입력해 주세요.')
+                    }
+                    else {
+                        let myObject = {
+                            '항목': a,
+                            '간격': b,
+                            '가격': c,
+                            '가격문자열' : c.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                            '달': Math.floor(c * 30 / b / 10000),
+                            '년': Math.floor(c * 365 / b / 10000),
+                            '밸류' : d
+                        }
+                        myArray.push(myObject);
+                        let newArray = myArray
+                        console.log(myArray);
+                        setA('');
+                        setB('1');
+                        setC('');
+                        setD('');
+                        buttonOnclick(newArray);
+                    }
+                }}>입력하기</div>
+
+        </>
+    )
+}
+
+export default Input;
